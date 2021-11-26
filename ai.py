@@ -2,10 +2,13 @@
 #                     u A QT
 
 import random
+import time
 from copy import deepcopy
 
 
 # ******
+from sqlite3 import Time
+
 "DFS"
 "BFS"
 "IDFS"
@@ -34,12 +37,15 @@ class Agent:
 
         ######### EDITABLE SECTION #########
 
-        if self.predicted_actions==[]: self.predicted_actions=self.idfs(sensor_data['Current_Env'])
+        if self.predicted_actions==[]: self.predicted_actions=self.bfs(sensor_data['Current_Env'])
         action=self.predicted_actions.pop()
+        time.sleep(1)
 
         ######### END OF EDITABLE SECTION #########
 
         return action
+    
+    # idfs--------------------------------------------------------------------------------------------------------------
 
     ######### VV EDITABLE SECTION VV #########
     def idfs(self, root_env):
@@ -61,7 +67,6 @@ class Agent:
         random.shuffle(actions_list)
         for action in actions_list:
             child_game = deepcopy(game)
-            # print((child_game.perceive(self))["score"])
             game_result = child_game.take_action(action, self.my_id)
             if 'has died' not in game_result:
 
@@ -73,19 +78,18 @@ class Agent:
 
         return [False, "no good action found"]
 
-
+    # bfs---------------------------------------------------------------------------------------------------------------
 
     def bfs(self, root_env):
         bfs_tree_leaves = []
         bfs_tree_leaves.append({
-            "game":root_env,
-            "predicted_actions":[]
+            "game": root_env,
+            "predicted_actions": []
         })
         while True:
             bfs_node = bfs_tree_leaves.pop()
             if bfs_node["game"].goal_test():
-                action_taken = bfs_node["predicted_actions"].copy()
-                return action_taken
+                return bfs_node["predicted_actions"]
 
             actions_list = ["right", "left", "up", "down"]
             random.shuffle(actions_list)
@@ -99,33 +103,31 @@ class Agent:
                         "predicted_actions": bfs_node["predicted_actions"] + [action]
                     })
 
+    # dfs---------------------------------------------------------------------------------------------------------------
 
+    def dfs_starter(self, root_env):
+        result = self.dfs(root_env)
+        if result[0]:
+            return result[1]
 
-
-
-
-    def dfs(self, game, limit):  # returns [success, action]
+    def dfs(self, game):  # returns [success, action]
         if game.goal_test(): return [True, "found the goal"]
-        elif limit == 0: return [False, "reached limit"]
 
         actions_list = ["right", "left", "up", "down"]
         random.shuffle(actions_list)
         for action in actions_list:
             child_game = deepcopy(game)
-            # print((child_game.perceive(self))["score"])
             game_result = child_game.take_action(action, self.my_id)
             if 'has died' not in game_result:
-
-                dls_result=self.dls(child_game, limit - 1)
-                actions_taken = deepcopy(dls_result[1]) if type(dls_result[1]) is list else []
+                dfs_result = self.dfs(child_game)
+                actions_taken = deepcopy(dfs_result[1]) if type(dfs_result[1]) is list else []
                 actions_taken.append(action)
-                if dls_result[0]:
+                if dfs_result[0]:
                     return [True, actions_taken]
 
         return [False, "no good action found"]
 
-
-
+    # Sample-----------------------------------------------------------------------------------------------------------
 
     # def idfs(self, root_env):
     #     depth = 1
@@ -160,3 +162,4 @@ class Agent:
     #
     #     return [False, "no good action found"]
     #
+
